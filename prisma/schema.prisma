@@ -1,0 +1,109 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  password String
+  name         String
+  timezone     String
+  sleepStart   DateTime
+  sleepEnd     DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  activities   UserActivity[]
+  schedules    UserSchedule[]
+  activityLogs ActivityLog[]
+}
+
+enum Priority {
+  low
+  medium
+  high
+}
+
+enum DayOfWeek {
+  monday
+  tuesday
+  wednesday
+  thursday
+  friday
+  saturday
+  sunday
+}
+
+model UserActivity {
+  id             String    @id @default(uuid())
+  userId         String
+  name           String
+  description    String?
+  dayOfWeek      DayOfWeek
+  preferredStart String?
+  preferredEnd   String?
+  customDuration Int?
+  priority       Priority
+  createdAt      DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  schedules    UserSchedule[]
+  activityLogs ActivityLog[]
+
+  @@unique([userId, name, dayOfWeek])
+}
+
+model UserSchedule {
+  id             String   @id @default(uuid())
+  userId         String
+  userActivityId String
+  startTime      String // "HH:mm"
+  endTime        String // "HH:mm"
+  aiConfidence   Float?
+  version        Int      @default(1)
+  isUserApproved Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  user         User              @relation(fields: [userId], references: [id])
+  userActivity UserActivity      @relation(fields: [userActivityId], references: [id])
+  days         UserScheduleDay[]
+
+  @@unique([userId, userActivityId, startTime, endTime])
+}
+
+model UserScheduleDay {
+  id         String    @id @default(uuid())
+  scheduleId String
+  dayOfWeek  DayOfWeek
+
+  schedule UserSchedule @relation(fields: [scheduleId], references: [id])
+
+  @@unique([scheduleId, dayOfWeek])
+}
+
+model ActivityLog {
+  id             String   @id @default(uuid())
+  userId         String
+  userActivityId String
+  date           DateTime
+  startTime      String // "HH:mm"
+  endTime        String // "HH:mm"
+  notes          String?
+  createdAt      DateTime @default(now())
+
+  user         User         @relation(fields: [userId], references: [id])
+  userActivity UserActivity @relation(fields: [userActivityId], references: [id])
+}
