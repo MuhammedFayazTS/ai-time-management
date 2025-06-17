@@ -6,6 +6,7 @@ import { useState } from "react";
 import { priorities } from "@/constants/activities";
 import { ActivityData } from "../../../types/activity.types";
 import { cn } from "@/lib/utils";
+import TimeInput from "../time-input";
 
 type Props = {
     open: boolean;
@@ -51,15 +52,15 @@ const AddActivityDialog = ({ open, onClose, onSave }: Props) => {
                         value={form.label}
                         onChange={(e) => handleFieldChange("label", e.target.value)}
                     />
-                    <Input
+                    <TimeInput
                         placeholder="Start time (e.g. 09:00)"
                         value={form.startTime}
-                        onChange={(e) => handleFieldChange("startTime", e.target.value)}
+                        onChange={(val) => handleFieldChange("startTime", val)}
                     />
-                    <Input
+                    <TimeInput
                         placeholder="End time (e.g. 10:00)"
                         value={form.endTime}
-                        onChange={(e) => handleFieldChange("endTime", e.target.value)}
+                        onChange={(val) => handleFieldChange("endTime", val)}
                     />
                     <Textarea
                         placeholder="Description (optional)"

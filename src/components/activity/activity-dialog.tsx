@@ -1,10 +1,10 @@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { EditableActivity } from "../../../types/activity.types";
 import { cn } from "@/lib/utils";
 import { priorities } from "@/constants/activities";
+import TimeInput from "../time-input";
 
 type Props = {
     open: boolean;
@@ -25,15 +25,16 @@ const ActivityDialog = ({ open, selected, onClose, onChange, onSave }: Props) =>
                 </DialogHeader>
 
                 <div className="flex flex-col gap-3">
-                    <Input
-                        placeholder="Start time (e.g. 09:00)"
+                    <TimeInput
+                        placeholder="Start time (e.g. 09:00 AM)"
                         value={selected.startTime || ""}
-                        onChange={(e) => onChange({ ...selected, startTime: e.target.value })}
+                        onChange={(val) => onChange({ ...selected, startTime: val })}
                     />
-                    <Input
-                        placeholder="End time (e.g. 10:00)"
+
+                    <TimeInput
+                        placeholder="End time (e.g. 10:00 AM)"
                         value={selected.endTime || ""}
-                        onChange={(e) => onChange({ ...selected, endTime: e.target.value })}
+                        onChange={(val) => onChange({ ...selected, endTime: val })}
                     />
                     <Textarea
                         placeholder="Description (optional)"
