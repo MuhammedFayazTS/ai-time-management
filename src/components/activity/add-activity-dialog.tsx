@@ -2,43 +2,69 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { EditableActivity } from "../../../types/activity.types";
-import { cn } from "@/lib/utils";
+import { useState } from "react";
 import { priorities } from "@/constants/activities";
+import { ActivityData } from "../../../types/activity.types";
+import { cn } from "@/lib/utils";
 
 type Props = {
     open: boolean;
-    selected: EditableActivity | null;
     onClose: () => void;
-    onChange: (data: EditableActivity) => void;
-    onSave: () => void;
+    onSave: (data: ActivityData) => void;
 };
 
-const ActivityDialog = ({ open, selected, onClose, onChange, onSave }: Props) => {
-    if (!selected) return null;
+const AddActivityDialog = ({ open, onClose, onSave }: Props) => {
+    const [form, setForm] = useState<ActivityData>({
+        label: "",
+        description: "",
+        startTime: "",
+        endTime: "",
+        priority: "low",
+    });
+
+    const handleFieldChange = (field: keyof ActivityData, value: string) => {
+        setForm((prev) => ({ ...prev, [field]: value }));
+    };
+
+    const handleSaveClick = () => {
+        if (!form.label) return;
+        onSave(form);
+        setForm({
+            label: "",
+            description: "",
+            startTime: "",
+            endTime: "",
+            priority: "low",
+        });
+    };
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Edit Activity</DialogTitle>
+                    <DialogTitle>New Activity</DialogTitle>
                 </DialogHeader>
 
                 <div className="flex flex-col gap-3">
                     <Input
+                        placeholder="Activity Name"
+                        value={form.label}
+                        onChange={(e) => handleFieldChange("label", e.target.value)}
+                    />
+                    <Input
                         placeholder="Start time (e.g. 09:00)"
-                        value={selected.startTime || ""}
-                        onChange={(e) => onChange({ ...selected, startTime: e.target.value })}
+                        value={form.startTime}
+                        onChange={(e) => handleFieldChange("startTime", e.target.value)}
                     />
                     <Input
                         placeholder="End time (e.g. 10:00)"
-                        value={selected.endTime || ""}
-                        onChange={(e) => onChange({ ...selected, endTime: e.target.value })}
+                        value={form.endTime}
+                        onChange={(e) => handleFieldChange("endTime", e.target.value)}
                     />
                     <Textarea
                         placeholder="Description (optional)"
-                        value={selected.description || ""}
-                        onChange={(e) => onChange({ ...selected, description: e.target.value })}
+                        value={form.description || ""}
+                        onChange={(e) => handleFieldChange("description", e.target.value)}
                     />
 
                     <div className="flex flex-col gap-1 mt-2">
@@ -50,10 +76,9 @@ const ActivityDialog = ({ open, selected, onClose, onChange, onSave }: Props) =>
                                     className={cn(
                                         "px-3 py-1 rounded-full border text-xs font-medium transition",
                                         color,
-                                        selected.priority === value && `${selectedColor} ring-2 ring-offset-1`
+                                        form.priority === value && `${selectedColor} ring-2 ring-offset-1`
                                     )}
-                                    onClick={() => onChange({ ...selected, priority: value })}
-
+                                    onClick={() => handleFieldChange("priority", value)}
                                 >
                                     {label}
                                 </button>
@@ -63,11 +88,11 @@ const ActivityDialog = ({ open, selected, onClose, onChange, onSave }: Props) =>
                 </div>
 
                 <DialogFooter className="mt-4">
-                    <Button onClick={onSave}>Save</Button>
+                    <Button onClick={handleSaveClick}>Add</Button>
                 </DialogFooter>
             </DialogContent>
-        </Dialog >
+        </Dialog>
     );
 };
 
-export default ActivityDialog;
+export default AddActivityDialog;
