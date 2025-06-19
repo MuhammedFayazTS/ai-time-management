@@ -71,3 +71,5 @@ export const priorities: {
     selectedColor: "ring-red-500",
   },
 ];
+
+export const daysOfWeek = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];

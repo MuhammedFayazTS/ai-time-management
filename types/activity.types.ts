@@ -3,6 +3,7 @@ export type ActivityData = {
   description?: string;
   startTime?: string;
   endTime?: string;
+  duration?: string;
   priority?: Priority;
 };
 

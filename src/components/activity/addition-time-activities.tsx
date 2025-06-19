@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import TimeInput from "../time-input";
 
 type Props = {
   sleepStart: string;
@@ -20,15 +21,15 @@ const AdditionalTimeConsumption = ({
 }: Props) => (
   <div className="flex-1 flex flex-col gap-4 mt-4">
     <div className="grid grid-cols-2 gap-2">
-      <Input
+      <TimeInput
         placeholder="Sleep Start (e.g., 23:00)"
         value={sleepStart}
-        onChange={(e) => onChange("sleepStart", e.target.value)}
+        onChange={(value) => onChange("sleepStart", value)}
       />
-      <Input
+      <TimeInput
         placeholder="Sleep End (e.g., 07:00)"
         value={sleepEnd}
-        onChange={(e) => onChange("sleepEnd", e.target.value)}
+        onChange={(value) => onChange("sleepEnd", value)}
       />
     </div>
 

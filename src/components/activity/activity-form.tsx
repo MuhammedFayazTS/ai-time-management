@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { activityOptions } from "@/constants/activities";
+import { useReducer } from "react";
+import { activityOptions, daysOfWeek } from "@/constants/activities";
 import { ActivityData, EditableActivity } from "../../../types/activity.types";
 import ActivityOption from "./activity-option";
 import ActivityList from "./activity-list";
@@ -10,159 +10,185 @@ import ActivityStepper from "./activity-stepper";
 import { Button } from "../ui/button";
 import AddActivityDialog from "./add-activity-dialog";
 import { Plus } from "lucide-react";
+import { activityFormReducer } from "./activity-form-reducer";
+import { cn } from "@/lib/utils";
+import DaysDropDown from "../days-dropdown";
+
+const initialState = {
+    step: 0,
+    defaultActivities: [],
+    dayWiseActivities: {},
+    selectedDay: "Mo",
+    selectedActivity: null,
+    expandedIndexes: [],
+    sleepStart: "",
+    sleepEnd: "",
+    travelTime: "",
+    travelDistance: "",
+    reservedTime: "",
+    open: false,
+    newDialogOpen: false,
+};
+
+
 const ActivityForm = () => {
-    const [step, setStep] = useState(0);
-
-    const [activities, setActivities] = useState<ActivityData[]>([]);
-    const [selectedActivity, setSelectedActivity] = useState<EditableActivity | null>(null);
-    const [open, setOpen] = useState(false);
-    const [expandedIndexes, setExpandedIndexes] = useState<number[]>([]);
-
-    const [sleepStart, setSleepStart] = useState("");
-    const [sleepEnd, setSleepEnd] = useState("");
-    const [travelTime, setTravelTime] = useState("");
-    const [travelDistance, setTravelDistance] = useState("");
-    const [reservedTime, setReservedTime] = useState("");
-
-    const [newDialogOpen, setNewDialogOpen] = useState(false);
+    const [state, dispatch] = useReducer(activityFormReducer, initialState);
 
     const handleAdd = (activity: ActivityData) => {
-        setActivities((prev) => [...prev, activity]);
+        dispatch({ type: "ADD_ACTIVITY", payload: activity });
+    };
+
+    const handleRemove = (index: number) => {
+        dispatch({ type: "REMOVE_ACTIVITY", payload: index });
     };
 
     const handleEdit = (activity: EditableActivity) => {
-        setSelectedActivity(activity);
-        setOpen(true);
+        dispatch({ type: "SET_SELECTED", payload: activity });
+        dispatch({ type: "SET_DIALOG_OPEN", payload: true });
     };
 
-    const handleChange = (data: EditableActivity) => {
-        setSelectedActivity(data);
-    };
-
-    const handleSave = () => {
-        if (selectedActivity) {
-            const updated = [...activities];
-            updated[selectedActivity.index] = {
-                label: selectedActivity.label,
-                description: selectedActivity.description,
-                startTime: selectedActivity.startTime,
-                endTime: selectedActivity.endTime,
-                priority: selectedActivity.priority,
-            };
-            setActivities(updated);
-            setOpen(false);
-        }
+    const handleSave = (activity: EditableActivity) => {
+        dispatch({ type: "UPDATE_ACTIVITY", payload: activity });
     };
 
     const toggleExpanded = (index: number) => {
-        setExpandedIndexes((prev) =>
-            prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
-        );
+        dispatch({ type: "TOGGLE_EXPAND", payload: index });
     };
 
     const handleInputChange = (field: string, value: string) => {
-        switch (field) {
-            case "sleepStart": return setSleepStart(value);
-            case "sleepEnd": return setSleepEnd(value);
-            case "travelTime": return setTravelTime(value);
-            case "travelDistance": return setTravelDistance(value);
-            case "reservedTime": return setReservedTime(value);
-        }
+        dispatch({ type: "SET_FIELD_VALUE", field, value });
     };
 
     const handleNext = () => {
-        if (step < 1) setStep((s) => s + 1);
+        if (state.step < 1) dispatch({ type: "SET_STEP", payload: state.step + 1 });
         else {
-            // Final submit or navigation
             console.log({
-                activities,
-                sleepStart,
-                sleepEnd,
-                travelTime,
-                travelDistance,
-                reservedTime,
+                dayWiseActivities: state.dayWiseActivities,
+                defaultActivities: state.defaultActivities,
+                sleepStart: state.sleepStart,
+                sleepEnd: state.sleepEnd,
+                travelTime: state.travelTime,
+                travelDistance: state.travelDistance,
+                reservedTime: state.reservedTime,
             });
         }
     };
 
     const handleBack = () => {
-        if (step > 0) setStep((s) => s - 1);
+        if (state.step > 0) dispatch({ type: "SET_STEP", payload: state.step - 1 });
     };
 
     const handleNewActivitySave = (activity: ActivityData) => {
-        setActivities((prev) => [...prev, activity]);
-        setNewDialogOpen(false);
+        dispatch({ type: "ADD_ACTIVITY", payload: activity });
+        dispatch({ type: "SET_NEW_DIALOG_OPEN", payload: false });
     };
 
-    const handleRemove = (index: number) => {
-        setActivities((prev) => prev.filter((_, i) => i !== index));
+    const handleDayChange = (day: string) => {
+        dispatch({ type: "SET_SELECTED_DAY", payload: day });
+
+        // if (!state.dayWiseActivities[day]) {
+        //     dispatch({ type: "SYNC_DAY_WITH_DEFAULT" });
+        // }
     };
+
+    const activities = state.dayWiseActivities[state.selectedDay] || state.defaultActivities;
 
     return (
         <>
-            {step === 0 && (
+            {state.step === 0 && (
                 <div className="flex-1 flex flex-col justify-between">
-                    <div className="flex flex-wrap gap-2 mb-4">
-                        {activityOptions.map(({ label, icon: Icon }) => (
-                            <ActivityOption
-                                key={label}
-                                label={label}
-                                Icon={Icon}
-                                onAdd={handleAdd}
-                                onEdit={handleEdit}
-                                selectedActivites={activities} />
-                        ))}
-                        <Button
-                            variant="default"
-                            className="text-sm px-3 py-1 rounded-full flex items-center gap-2 border-dashed text-white bg-blue-600 hover:bg-blue-800"
-                            onClick={() => setNewDialogOpen(true)}
-                        >
-                            <Plus className="h-4 w-4" />
-                            Custom Activity
-                        </Button>
+
+                    <div className="w-100 flex flex-col gap-2">
+                        <div className="w-100 grid grid-cols-7 gap-2">
+                            {daysOfWeek.map((day) => (
+                                <button
+                                    key={day}
+                                    className={cn(
+                                        "w-full aspect-square flex items-center justify-center rounded shadow border",
+                                        state.selectedDay === day ? "bg-blue-600 text-white" : "bg-gray-500"
+                                    )}
+                                    onClick={() => handleDayChange(day)}
+                                >
+                                    {day}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 my-5">
+                            {activityOptions.map(({ label, icon: Icon }) => (
+                                <ActivityOption
+                                    key={label}
+                                    label={label}
+                                    Icon={Icon}
+                                    onAdd={handleAdd}
+                                    onEdit={handleEdit}
+                                    selectedActivites={activities}
+                                />
+                            ))}
+                            <Button
+                                variant="default"
+                                className="text-sm px-3 py-1 rounded-full flex items-center gap-2 border-dashed text-white bg-blue-600 hover:bg-blue-800"
+                                onClick={() => dispatch({ type: "SET_NEW_DIALOG_OPEN", payload: true })}
+                            >
+                                <Plus className="h-4 w-4" />
+                                Custom Activity
+                            </Button>
+                        </div>
                     </div>
 
-                    <ActivityList
-                        activities={activities}
-                        expandedIndexes={expandedIndexes}
-                        onExpandToggle={toggleExpanded}
-                        onEdit={handleEdit}
-                        onRemove={handleRemove}
-                    />
+                    <div className="w-100 flex flex-col gap-y-3">
+                        <div className="flex justify-between items-center">
+                            <DaysDropDown
+                                selectedDay={state.selectedDay}
+                                onChange={(day) => dispatch({ type: "COPY_FROM_DAY", payload: day })} />
+                            <Button
+                                variant="destructive"
+                                className="ml-2"
+                                onClick={() => dispatch({ type: "CLEAR_DAY_ACTIVITIES" })}
+                            >
+                                Clear Day
+                            </Button>
+                        </div>
+                        <ActivityList
+                            activities={activities}
+                            expandedIndexes={state.expandedIndexes}
+                            onExpandToggle={toggleExpanded}
+                            onEdit={handleEdit}
+                            onRemove={handleRemove}
+                        />
+                    </div>
 
                     <ActivityDialog
-                        open={open}
-                        selected={selectedActivity}
-                        onClose={() => setOpen(false)}
-                        onChange={handleChange}
+                        open={state.open}
+                        selected={state.selectedActivity}
+                        onClose={() => dispatch({ type: "SET_DIALOG_OPEN", payload: false })}
                         onSave={handleSave}
                     />
 
-
                     <AddActivityDialog
-                        open={newDialogOpen}
-                        onClose={() => setNewDialogOpen(false)}
+                        open={state.newDialogOpen}
+                        onClose={() => dispatch({ type: "SET_NEW_DIALOG_OPEN", payload: false })}
                         onSave={handleNewActivitySave}
                     />
                 </div>
             )}
 
-            {step === 1 && (
+            {state.step === 1 && (
                 <AdditionalTimeConsumption
-                    sleepStart={sleepStart}
-                    sleepEnd={sleepEnd}
-                    travelTime={travelTime}
-                    travelDistance={travelDistance}
-                    reservedTime={reservedTime}
+                    sleepStart={state.sleepStart}
+                    sleepEnd={state.sleepEnd}
+                    travelTime={state.travelTime}
+                    travelDistance={state.travelDistance}
+                    reservedTime={state.reservedTime}
                     onChange={handleInputChange}
                 />
             )}
 
             <ActivityStepper
-                step={step}
+                step={state.step}
                 onNext={handleNext}
                 onBack={handleBack}
-                isLastStep={step === 1}
+                isLastStep={state.step === 1}
             />
         </>
     );

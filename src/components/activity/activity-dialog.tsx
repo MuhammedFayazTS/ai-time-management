@@ -1,21 +1,116 @@
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+"use client";
+
+import {
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { EditableActivity } from "../../../types/activity.types";
 import { cn } from "@/lib/utils";
 import { priorities } from "@/constants/activities";
 import TimeInput from "../time-input";
+import { useEffect, useState } from "react";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Clock, Timer } from "lucide-react";
 
 type Props = {
     open: boolean;
     selected: EditableActivity | null;
     onClose: () => void;
-    onChange: (data: EditableActivity) => void;
-    onSave: () => void;
+    onSave: (data: EditableActivity) => void;
 };
 
-const ActivityDialog = ({ open, selected, onClose, onChange, onSave }: Props) => {
-    if (!selected) return null;
+const ActivityDialog = ({ open, selected, onClose, onSave }: Props) => {
+    const [localActivity, setLocalActivity] = useState<EditableActivity | null>(null);
+    const [useDuration, setUseDuration] = useState(false);
+    const [durationUnit, setDurationUnit] = useState<"minutes" | "hours">("minutes");
+
+    useEffect(() => {
+        if (!selected) return;
+
+        setLocalActivity({ ...selected });
+
+        const hasTimeRange = selected.startTime || selected.endTime;
+        setUseDuration(!hasTimeRange);
+
+        if (!hasTimeRange && selected.duration) {
+            const [, unit] = selected.duration.split(" ");
+            if (unit === "minutes" || unit === "hours") {
+                setDurationUnit(unit);
+            }
+        }
+    }, [selected]);
+
+    if (!localActivity) return null;
+
+    const handleFieldChange = (field: keyof EditableActivity, value: string) => {
+        setLocalActivity((prev) => prev ? { ...prev, [field]: value } : prev);
+    };
+
+    const toggleInputMode = () => {
+        setUseDuration((prev) => {
+            const next = !prev;
+
+            setLocalActivity((prev) =>
+                prev
+                    ? {
+                        ...prev,
+                        ...(next
+                            ? { startTime: "", endTime: "" }
+                            : { duration: "" }),
+                    }
+                    : prev
+            );
+
+            return next;
+        });
+    };
+
+    const handleDurationChange = (val: string) => {
+        setLocalActivity((prev) =>
+            prev
+                ? {
+                    ...prev,
+                    startTime: "",
+                    endTime: "",
+                    duration: val ? `${val} ${durationUnit}` : "",
+                }
+                : prev
+        );
+    };
+
+    const handleDurationUnitChange = (unit: "minutes" | "hours") => {
+        setDurationUnit(unit);
+        setLocalActivity((prev) => {
+            if (!prev) return prev;
+            const val = prev.duration?.split(" ")[0] ?? "";
+            return {
+                ...prev,
+                startTime: "",
+                endTime: "",
+                duration: val ? `${val} ${unit}` : "",
+            };
+        });
+    };
+
+    const handleSave = () => {
+        if (localActivity) {
+            onSave(localActivity);
+            onClose();
+        }
+    };
+
+    const durationVal = localActivity.duration?.split(" ")[0] ?? "";
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
@@ -25,21 +120,70 @@ const ActivityDialog = ({ open, selected, onClose, onChange, onSave }: Props) =>
                 </DialogHeader>
 
                 <div className="flex flex-col gap-3">
-                    <TimeInput
-                        placeholder="Start time (e.g. 09:00 AM)"
-                        value={selected.startTime || ""}
-                        onChange={(val) => onChange({ ...selected, startTime: val })}
-                    />
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={toggleInputMode}
+                        className="w-fit text-xs px-3 py-1 self-start flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white rounded-md shadow-sm transition"
+                    >
+                        {useDuration ? (
+                            <>
+                                <Clock className="w-4 h-4" />
+                                Switch to Start/End Time
+                            </>
+                        ) : (
+                            <>
+                                <Timer className="w-4 h-4" />
+                                Switch to Duration
+                            </>
+                        )}
+                    </Button>
 
-                    <TimeInput
-                        placeholder="End time (e.g. 10:00 AM)"
-                        value={selected.endTime || ""}
-                        onChange={(val) => onChange({ ...selected, endTime: val })}
-                    />
+                    {useDuration ? (
+                        <div className="flex gap-2 items-center">
+                            <Input
+                                type="number"
+                                min={1}
+                                value={durationVal}
+                                onChange={(e) => handleDurationChange(e.target.value)}
+                                className="w-32"
+                                placeholder="Duration"
+                            />
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" className="w-[120px] justify-between">
+                                        {durationUnit.charAt(0).toUpperCase() + durationUnit.slice(1)}
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-[120px]">
+                                    <DropdownMenuItem onClick={() => handleDurationUnitChange("minutes")}>
+                                        Minutes
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleDurationUnitChange("hours")}>
+                                        Hours
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+                    ) : (
+                        <>
+                            <TimeInput
+                                placeholder="Start time (e.g. 09:00 AM)"
+                                value={localActivity.startTime || ""}
+                                onChange={(val) => handleFieldChange("startTime", val)}
+                            />
+                            <TimeInput
+                                placeholder="End time (e.g. 10:00 AM)"
+                                value={localActivity.endTime || ""}
+                                onChange={(val) => handleFieldChange("endTime", val)}
+                            />
+                        </>
+                    )}
+
                     <Textarea
                         placeholder="Description (optional)"
-                        value={selected.description || ""}
-                        onChange={(e) => onChange({ ...selected, description: e.target.value })}
+                        value={localActivity.description || ""}
+                        onChange={(e) => handleFieldChange("description", e.target.value)}
                     />
 
                     <div className="flex flex-col gap-1 mt-2">
@@ -51,10 +195,9 @@ const ActivityDialog = ({ open, selected, onClose, onChange, onSave }: Props) =>
                                     className={cn(
                                         "px-3 py-1 rounded-full border text-xs font-medium transition",
                                         color,
-                                        selected.priority === value && `${selectedColor} ring-2 ring-offset-1`
+                                        localActivity.priority === value && `${selectedColor} ring-2 ring-offset-1`
                                     )}
-                                    onClick={() => onChange({ ...selected, priority: value })}
-
+                                    onClick={() => handleFieldChange("priority", value)}
                                 >
                                     {label}
                                 </button>
@@ -64,10 +207,10 @@ const ActivityDialog = ({ open, selected, onClose, onChange, onSave }: Props) =>
                 </div>
 
                 <DialogFooter className="mt-4">
-                    <Button onClick={onSave}>Save</Button>
+                    <Button onClick={handleSave}>Save</Button>
                 </DialogFooter>
             </DialogContent>
-        </Dialog >
+        </Dialog>
     );
 };
 

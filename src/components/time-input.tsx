@@ -34,6 +34,7 @@ const TimeInput = ({ placeholder, value, onChange }: Props) => {
         }
     }, [value]);
 
+    // Need a fix this - !!Cannot type minute with 2 digits
     // Update output when any field changes
     useEffect(() => {
         if (hour && minute) {
