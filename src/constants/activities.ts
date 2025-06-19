@@ -55,20 +55,26 @@ export const priorities: {
   {
     label: "Low",
     value: "low",
-    color: "bg-green-100 text-green-700 border-green-400",
-    selectedColor: "ring-green-500",
+    color:
+      "bg-gradient-to-br from-green-50 to-green-100 text-green-700 border border-green-200",
+    selectedColor:
+      "bg-gradient-to-br from-green-400 to-green-500 text-white border border-green-600 shadow",
   },
   {
     label: "Medium",
     value: "medium",
-    color: "bg-yellow-100 text-yellow-800 border-yellow-400",
-    selectedColor: "ring-yellow-500",
+    color:
+      "bg-gradient-to-br from-yellow-50 to-yellow-100 text-yellow-800 border border-yellow-200",
+    selectedColor:
+      "bg-gradient-to-br from-yellow-400 to-yellow-500 text-white border border-yellow-600 shadow",
   },
   {
     label: "High",
     value: "high",
-    color: "bg-red-100 text-red-700 border-red-500",
-    selectedColor: "ring-red-500",
+    color:
+      "bg-gradient-to-br from-red-50 to-red-100 text-red-700 border border-red-200",
+    selectedColor:
+      "bg-gradient-to-br from-red-500 to-red-600 text-white border border-red-700 shadow",
   },
 ];
 

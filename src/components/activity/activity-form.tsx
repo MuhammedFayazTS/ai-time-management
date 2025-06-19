@@ -16,9 +16,11 @@ import DaysDropDown from "../days-dropdown";
 import { saveUserActivitiesWithDays } from "@/lib/actions/user-activity";
 import { DayOfWeek } from "@prisma/client";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const ActivityForm = () => {
     const [state, dispatch] = useReducer(activityFormReducer, initialState);
+    const router = useRouter();
 
     const handleAdd = (activity: ActivityData) => {
         dispatch({ type: "ADD_ACTIVITY", payload: activity });
@@ -85,6 +87,7 @@ const ActivityForm = () => {
             );
 
             dispatch({ type: "RESET_FORM" });
+            router.push('/')
         } catch (err) {
             toast.error("Save failed",
                 {
@@ -104,15 +107,6 @@ const ActivityForm = () => {
     const handleNext = () => {
         if (state.step < 1) dispatch({ type: "SET_STEP", payload: state.step + 1 });
         else {
-            console.log({
-                dayWiseActivities: state.dayWiseActivities,
-                defaultActivities: state.defaultActivities,
-                sleepStart: state.sleepStart,
-                sleepEnd: state.sleepEnd,
-                travelTime: state.travelTime,
-                travelDistance: state.travelDistance,
-                reservedTime: state.reservedTime,
-            });
             handleSubmitUserActivities()
         }
     };
@@ -148,7 +142,10 @@ const ActivityForm = () => {
                                     key={label}
                                     className={cn(
                                         "w-full aspect-square flex items-center justify-center rounded shadow border",
-                                        state.selectedDay === value ? "bg-blue-600 text-white" : "bg-gray-500"
+                                        state.selectedDay === value
+                                            ? "bg-gradient-to-br from-indigo-500 to-purple-500 text-white dark:from-violet-500 dark:to-fuchsia-600"
+                                            : "bg-zinc-200 text-gray-800 dark:bg-slate-700 dark:text-gray-200"
+
                                     )}
                                     onClick={() => handleDayChange(value)}
                                 >
@@ -170,7 +167,7 @@ const ActivityForm = () => {
                             ))}
                             <Button
                                 variant="default"
-                                className="text-sm px-3 py-1 rounded-full flex items-center gap-2 border-dashed text-white bg-blue-600 hover:bg-blue-800"
+                                className="text-sm px-3 py-1 rounded-full flex items-center gap-2 border-dashed text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 dark:from-violet-500 dark:to-fuchsia-500 dark:hover:from-violet-600 dark:hover:to-pink-500"
                                 onClick={() => dispatch({ type: "SET_NEW_DIALOG_OPEN", payload: true })}
                             >
                                 <Plus className="h-4 w-4" />
@@ -185,8 +182,8 @@ const ActivityForm = () => {
                                 selectedDay={state.selectedDay}
                                 onChange={(day) => dispatch({ type: "COPY_FROM_DAY", payload: day.value })} />
                             <Button
-                                variant="destructive"
-                                className="ml-2"
+                                variant="default"
+                                className="bg-red-500/90 hover:bg-red-500 text-white dark:bg-red-400 dark:hover:bg-red-500"
                                 onClick={() => dispatch({ type: "CLEAR_DAY_ACTIVITIES" })}
                             >
                                 Clear Day
@@ -232,6 +229,7 @@ const ActivityForm = () => {
                 onNext={handleNext}
                 onBack={handleBack}
                 isLastStep={state.step === 1}
+                isSaveDisabled={(!state.dayWiseActivities || !state.defaultActivities?.length) && (!state.defaultActivities || !state.dayWiseActivities?.length)}
             />
         </>
     );

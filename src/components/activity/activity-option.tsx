@@ -27,7 +27,7 @@ const ActivityOption = ({ selectedActivites, label, Icon, onAdd, onEdit }: Props
     return (
         <Button
             variant="outline"
-            className="text-sm px-3 py-1 rounded-full flex items-center gap-2"
+            className="text-sm px-3 py-1 rounded-full flex items-center gap-2 border bg-gradient-to-br from-white to-zinc-100 dark:from-slate-800 dark:to-slate-900"
             {...bindLongPress()}
             onClick={() => onAdd(newActivity, Date.now())}
         >

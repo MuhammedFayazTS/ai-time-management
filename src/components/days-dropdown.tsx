@@ -35,13 +35,13 @@ const DaysDropDown: React.FC<DaysDropDownProps> = ({
             <DropdownMenuContent>
                 <DropdownMenuLabel>Select Day</DropdownMenuLabel>
                 {daysOfWeek
-                    .filter((day) => day !== selectedDay)
+                    .filter((day) => day.value !== selectedDay)
                     .map((day) => (
                         <DropdownMenuItem
-                            key={day}
+                            key={day.value}
                             onClick={() => onChange(day)}
                         >
-                            {day}
+                            {day.value.toUpperCase()}
                         </DropdownMenuItem>
                     ))}
             </DropdownMenuContent>

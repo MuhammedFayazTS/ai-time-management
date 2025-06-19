@@ -97,7 +97,7 @@ const AddActivityDialog = ({ open, onClose, onSave }: Props) => {
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent>
+            <DialogContent className="dark:border dark:border-slate-500 bg-gradient-to-b from-purple-50 via-white to-white  dark:from-slate-900 dark:via-slate-950 dark:to-slate-950 shadow-xl border border-border">
                 <DialogHeader>
                     <DialogTitle>New Activity</DialogTitle>
                 </DialogHeader>
@@ -112,8 +112,9 @@ const AddActivityDialog = ({ open, onClose, onSave }: Props) => {
                     <Button
                         type="button"
                         onClick={toggleInputMode}
-                        className="w-fit text-xs px-3 py-1 self-start flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white rounded-md shadow-sm transition"
+                        className="w-fit text-xs px-3 py-1 self-start flex items-center gap-2 text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-md shadow-md transition"
                     >
+
                         {useDuration ? (
                             <>
                                 <Clock className="w-4 h-4" />
@@ -184,7 +185,7 @@ const AddActivityDialog = ({ open, onClose, onSave }: Props) => {
                                     className={cn(
                                         "px-3 py-1 rounded-full border text-xs font-medium transition",
                                         color,
-                                        form.priority === value && `${selectedColor} ring-2 ring-offset-1`
+                                        form.priority === value && `${selectedColor}`
                                     )}
                                     onClick={() => handleFieldChange("priority", value)}
                                 >
@@ -196,7 +197,12 @@ const AddActivityDialog = ({ open, onClose, onSave }: Props) => {
                 </div>
 
                 <DialogFooter className="mt-4">
-                    <Button onClick={handleSaveClick}>Add</Button>
+                    <Button
+                        onClick={handleSaveClick}
+                        className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-md"
+                    >
+                        Add
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
