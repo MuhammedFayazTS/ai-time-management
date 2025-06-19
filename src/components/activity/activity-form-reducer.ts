@@ -29,7 +29,24 @@ type Action =
   | { type: "SET_SELECTED_DAY"; payload: string }
   | { type: "SYNC_DAY_WITH_DEFAULT" }
   | { type: "CLEAR_DAY_ACTIVITIES" }
-  | { type: "COPY_FROM_DAY"; payload: string };
+  | { type: "COPY_FROM_DAY"; payload: string }
+  | { type: "RESET_FORM" };
+
+export const initialState = {
+  step: 0,
+  defaultActivities: [],
+  dayWiseActivities: {},
+  selectedDay: "monday",
+  selectedActivity: null,
+  expandedIndexes: [],
+  sleepStart: "",
+  sleepEnd: "",
+  travelTime: "",
+  travelDistance: "",
+  reservedTime: "",
+  open: false,
+  newDialogOpen: false,
+};
 
 export const activityFormReducer = (state: State, action: Action): State => {
   const selectedDay = state.selectedDay;
@@ -130,6 +147,12 @@ export const activityFormReducer = (state: State, action: Action): State => {
           ...state.dayWiseActivities,
           [selectedDay]: [],
         },
+      };
+
+    case "RESET_FORM":
+      return {
+        ...initialState,
+        defaultActivities: [],
       };
 
     default:

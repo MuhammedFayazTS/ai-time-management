@@ -10,26 +10,12 @@ import ActivityStepper from "./activity-stepper";
 import { Button } from "../ui/button";
 import AddActivityDialog from "./add-activity-dialog";
 import { Plus } from "lucide-react";
-import { activityFormReducer } from "./activity-form-reducer";
+import { activityFormReducer, initialState } from "./activity-form-reducer";
 import { cn } from "@/lib/utils";
 import DaysDropDown from "../days-dropdown";
-
-const initialState = {
-    step: 0,
-    defaultActivities: [],
-    dayWiseActivities: {},
-    selectedDay: "Mo",
-    selectedActivity: null,
-    expandedIndexes: [],
-    sleepStart: "",
-    sleepEnd: "",
-    travelTime: "",
-    travelDistance: "",
-    reservedTime: "",
-    open: false,
-    newDialogOpen: false,
-};
-
+import { saveUserActivitiesWithDays } from "@/lib/actions/user-activity";
+import { DayOfWeek } from "@prisma/client";
+import { toast } from "sonner";
 
 const ActivityForm = () => {
     const [state, dispatch] = useReducer(activityFormReducer, initialState);
@@ -59,6 +45,62 @@ const ActivityForm = () => {
         dispatch({ type: "SET_FIELD_VALUE", field, value });
     };
 
+    const handleSubmitUserActivities = async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const grouped = new Map<string, any>();
+
+        for (const [day, activities] of Object.entries(state.dayWiseActivities)) {
+            for (const a of activities) {
+                const key = a.label;
+
+                if (!grouped.has(key)) {
+                    grouped.set(key, {
+                        name: a.label,
+                        description: a.description || "",
+                        days: [],
+                        preferredStart: a.startTime || null,
+                        preferredEnd: a.endTime || null,
+                        customDuration: a.duration || null,
+                        priority: "medium",
+                    });
+                }
+
+                grouped.get(key).days.push(day as DayOfWeek);
+            }
+        }
+
+        const allActivities = Array.from(grouped.values());
+
+        try {
+            const res = await saveUserActivitiesWithDays(allActivities);
+
+            toast.success("Activities saved",
+                {
+                    description: `${res.count} activities updated.`,
+                    cancel: {
+                        label: 'Cancel',
+                        onClick: () => console.log('Cancel!'),
+                    },
+                }
+            );
+
+            dispatch({ type: "RESET_FORM" });
+        } catch (err) {
+            toast.error("Save failed",
+                {
+                    description: "Something went wrong while saving activities.",
+                    cancel: {
+                        label: 'Cancel',
+                        onClick: () => console.log('Cancel!'),
+                    },
+                }
+            );
+
+            console.error("Failed to save activities", err);
+        }
+    };
+
+
     const handleNext = () => {
         if (state.step < 1) dispatch({ type: "SET_STEP", payload: state.step + 1 });
         else {
@@ -71,6 +113,7 @@ const ActivityForm = () => {
                 travelDistance: state.travelDistance,
                 reservedTime: state.reservedTime,
             });
+            handleSubmitUserActivities()
         }
     };
 
@@ -100,16 +143,16 @@ const ActivityForm = () => {
 
                     <div className="w-100 flex flex-col gap-2">
                         <div className="w-100 grid grid-cols-7 gap-2">
-                            {daysOfWeek.map((day) => (
+                            {daysOfWeek.map(({ label, value }) => (
                                 <button
-                                    key={day}
+                                    key={label}
                                     className={cn(
                                         "w-full aspect-square flex items-center justify-center rounded shadow border",
-                                        state.selectedDay === day ? "bg-blue-600 text-white" : "bg-gray-500"
+                                        state.selectedDay === value ? "bg-blue-600 text-white" : "bg-gray-500"
                                     )}
-                                    onClick={() => handleDayChange(day)}
+                                    onClick={() => handleDayChange(value)}
                                 >
-                                    {day}
+                                    {label}
                                 </button>
                             ))}
                         </div>
@@ -140,7 +183,7 @@ const ActivityForm = () => {
                         <div className="flex justify-between items-center">
                             <DaysDropDown
                                 selectedDay={state.selectedDay}
-                                onChange={(day) => dispatch({ type: "COPY_FROM_DAY", payload: day })} />
+                                onChange={(day) => dispatch({ type: "COPY_FROM_DAY", payload: day.value })} />
                             <Button
                                 variant="destructive"
                                 className="ml-2"

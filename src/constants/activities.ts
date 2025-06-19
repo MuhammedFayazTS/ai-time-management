@@ -72,4 +72,12 @@ export const priorities: {
   },
 ];
 
-export const daysOfWeek = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+export const daysOfWeek = [
+  { label: "Mo", value: "monday" },
+  { label: "Tu", value: "tuesday" },
+  { label: "We", value: "wednesday" },
+  { label: "Th", value: "thursday" },
+  { label: "Fr", value: "friday" },
+  { label: "Sa", value: "saturday" },
+  { label: "Su", value: "sunday" },
+];
