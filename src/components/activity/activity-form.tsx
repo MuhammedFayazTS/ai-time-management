@@ -14,9 +14,9 @@ import { activityFormReducer, initialState } from "./activity-form-reducer";
 import { cn } from "@/lib/utils";
 import DaysDropDown from "../days-dropdown";
 import { saveUserActivitiesWithDays } from "@/lib/actions/user-activity";
-import { DayOfWeek } from "@prisma/client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { DayOfWeek } from "@/lib/db/generated/prisma";
 
 const ActivityForm = () => {
     const [state, dispatch] = useReducer(activityFormReducer, initialState);
@@ -47,6 +47,13 @@ const ActivityForm = () => {
         dispatch({ type: "SET_FIELD_VALUE", field, value });
     };
 
+    const convertDuration = (duration: string) => {
+        const isHour = duration.split(" ")[1] === "hours"
+        const d = duration.split(" ")[0]
+        const convertedDuration = isHour ? +d * 60 : +d
+        return convertedDuration
+    }
+
     const handleSubmitUserActivities = async () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const grouped = new Map<string, any>();
@@ -56,13 +63,14 @@ const ActivityForm = () => {
                 const key = a.label;
 
                 if (!grouped.has(key)) {
+                    const duration = a.duration ? convertDuration(a.duration) : null
                     grouped.set(key, {
                         name: a.label,
                         description: a.description || "",
                         days: [],
                         preferredStart: a.startTime || null,
                         preferredEnd: a.endTime || null,
-                        customDuration: a.duration || null,
+                        customDuration: duration,
                         priority: "medium",
                     });
                 }
