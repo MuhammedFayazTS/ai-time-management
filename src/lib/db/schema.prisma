@@ -111,7 +111,6 @@ model UserActivity {
   userId         String
   name           String
   description    String?
-  dayOfWeek      DayOfWeek
   preferredStart String?
   preferredEnd   String?
   customDuration Int?
@@ -122,8 +121,19 @@ model UserActivity {
 
   schedules    UserSchedule[]
   activityLogs ActivityLog[]
+  days         UserActivityDay[] 
 
-  @@unique([userId, name, dayOfWeek])
+  @@unique([userId, name])
+}
+
+model UserActivityDay {
+  id            String     @id @default(uuid())
+  activityId    String
+  dayOfWeek     DayOfWeek
+
+  activity      UserActivity @relation(fields: [activityId], references: [id])
+
+  @@unique([activityId, dayOfWeek])
 }
 
 model UserSchedule {
